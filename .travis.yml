@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t zmfrederick/react-test -f ./client/Dockerfile.dev ./client
+    
+script:
+    - docker run zmfrederick/react-test npm test -- --coverage
+    
+after_success: 
+    - docker build -t zmfrederick/multi-client ./client
+    - docker build -t zmfrederick/multi-nginx ./nginx
+    - docker build -t zmfrederick/multi-server ./server
+    - docker build -t zmfrederick/multi-worker ./worker
+    # log in to the docker CLI
+    - echo "#DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # take those images and push them to docker hub
+    - docker push zmfrederick/multi-client
+    - docker push zmfrederick/multi-nginx
+    - docker push zmfrederick/multi-server
+    - docker push zmfrederick/multi-worker
